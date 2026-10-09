@@ -636,7 +636,7 @@ impl<'d, T: Instance> I2S<'d, T> {
             device.disable_tx();
 
             // TX is stopped almost instantly, spinning is fine.
-            while !device.is_tx_ptr_updated() {}
+            while device.is_enabled() && !device.is_tx_ptr_updated() {}
 
             trace!("TX DROP: Stopped");
         });
@@ -692,7 +692,7 @@ impl<'d, T: Instance> I2S<'d, T> {
             device.disable_rx();
 
             // TX is stopped almost instantly, spinning is fine.
-            while !device.is_rx_ptr_updated() {}
+            while device.is_enabled() && !device.is_rx_ptr_updated() {}
 
             trace!("RX DROP: Stopped");
         });
@@ -904,6 +904,11 @@ impl<T: Instance> Device<T> {
     pub fn disable(&self) {
         trace!("DISABLED");
         self.0.enable.write(|w| w.enable().disabled());
+    }
+
+    #[inline(always)]
+    fn is_enabled(&self) -> bool {
+        self.0.enable.read().enable().is_enabled()
     }
 
     #[inline(always)]
